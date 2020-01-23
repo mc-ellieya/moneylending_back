@@ -1,26 +1,12 @@
-//Packages
+//Third-party Libraries
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
-const mysql = require('mysql2');
+
+//Libraries
 const user = require('./user');
 const status = require('./status');
 //const bank;
-
-//mySQL configs
-const pool = mysql.createPool({
-    host: "35.231.57.89",
-    user: 'root',
-    password: '1b%ab3a1s%GlOfz*BP$qZSEkbCutyuRYmKb',
-    database: 'lend-main-db',
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0
-})
-
-//Initialize all function holders
-//Will replace later if we find better solution
-
 
 //Express configs
 const app = express();
@@ -28,47 +14,50 @@ const port = process.env.PORT || 8000;
 app.use(cors());
 app.use(bodyParser.json());
 
-user.init(pool);
-console.log(user.checkExists("username", "example1"));
 
 app.get('/api', (req, res) => {
     res.send("Connection success!");
 })
 
-app.post('/api/signup', (req, res) => {
-    res.send(user.signUp(req));
+app.post('/api/signup', async (req, res) => {
+    res.send(await user.signUp(req.body));
     //TODO: Probably will have to change this to JSON
 })
 
-app.post('/api/login', (req, res) => {
+app.post('/api/login', async (req, res) => {
     //TODO: Fill this in
+    res.send(await user.login(req.body));
 })
 
 //TODO: Make this more secure by requiring OAuth
-app.get('/api/status', (req, res) => {
-    //TODO: user.getVerifyStatus should throw an error
-    //TODO: implement some way to catch the message.
-    let verified, message;
+app.get('/api/status', async (req, res) => {
+    res.send(await user.getVerifyStatus(req.body));
+})
 
-    try {
-        verified = user.getVerifyStatus(req.id);
-        message = "OK";
-    } catch (error) {
-        message = error;
-    }
+//TODO: Make this more secure by requiring OAuth
+//TODO: Make this admin access only
+app.post('/api/status/update', async (req, res) => {
+    //The most unsecure way to have a "password", ever
+    let password = "zsLhmvSaHgPG5!@V$k0@p25YsnaP6At0Fpk";
 
-    res.json({
-        "success": verified,
-        "status": message
-    })
+   /**
+     * Assume req body object looks like this:
+     * {
+     *      password: password,
+     *      userID: int
+     * }
+     */
+
+
+
 })
 
 app.post('/api/bank/add', (req, res) => {
 
 })
 
-app.get('/', (req, res) => {
-    
+app.get('/', async (req, res) => {
+    res.send(await user.verify(req.body));
 })
 
 app.listen(port, () => console.log(`Listening on port ${port}`))
